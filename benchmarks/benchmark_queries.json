@@ -1,0 +1,389 @@
+[
+  {
+    "id": "recency_01",
+    "category": "recency",
+    "query": "What was AAPL's most recent closing price?",
+    "answer_type": "numeric",
+    "ground_truth_fn": "aapl_close_latest",
+    "tickers": ["AAPL"]
+  },
+  {
+    "id": "recency_02",
+    "category": "recency",
+    "query": "What was GOOG's closing price on the most recent trading day?",
+    "answer_type": "numeric",
+    "ground_truth_fn": "goog_close_latest",
+    "tickers": ["GOOG"]
+  },
+  {
+    "id": "recency_03",
+    "category": "recency",
+    "query": "What was MSFT's opening price on the most recent trading day?",
+    "answer_type": "numeric",
+    "ground_truth_fn": "msft_open_latest",
+    "tickers": ["MSFT"]
+  },
+  {
+    "id": "recency_04",
+    "category": "recency",
+    "query": "What was TSLA's trading volume on the most recent day?",
+    "answer_type": "numeric",
+    "ground_truth_fn": "tsla_volume_latest",
+    "tickers": ["TSLA"]
+  },
+  {
+    "id": "recency_05",
+    "category": "recency",
+    "query": "What was AAPL's highest price on the most recent trading day?",
+    "answer_type": "numeric",
+    "ground_truth_fn": "aapl_high_latest",
+    "tickers": ["AAPL"]
+  },
+  {
+    "id": "recency_06",
+    "category": "recency",
+    "query": "What was MSFT's lowest price on the most recent trading day?",
+    "answer_type": "numeric",
+    "ground_truth_fn": "msft_low_latest",
+    "tickers": ["MSFT"]
+  },
+  {
+    "id": "recency_07",
+    "category": "recency",
+    "query": "What was TSLA's closing price on the last trading day?",
+    "answer_type": "numeric",
+    "ground_truth_fn": "tsla_close_latest",
+    "tickers": ["TSLA"]
+  },
+  {
+    "id": "recency_08",
+    "category": "recency",
+    "query": "What was GOOG's trading volume on the most recent trading day?",
+    "answer_type": "numeric",
+    "ground_truth_fn": "goog_volume_latest",
+    "tickers": ["GOOG"]
+  },
+  {
+    "id": "recency_09",
+    "category": "recency",
+    "query": "Did AAPL close higher than it opened on the most recent trading day?",
+    "answer_type": "directional",
+    "ground_truth_fn": "aapl_close_vs_open_latest",
+    "tickers": ["AAPL"]
+  },
+  {
+    "id": "recency_10",
+    "category": "recency",
+    "query": "What was the price range for GOOG on the most recent day? That is, the high minus the low.",
+    "answer_type": "numeric",
+    "ground_truth_fn": "goog_range_latest",
+    "tickers": ["GOOG"]
+  },
+  {
+    "id": "recency_11",
+    "category": "recency",
+    "query": "What was MSFT's most recent closing price?",
+    "answer_type": "numeric",
+    "ground_truth_fn": "msft_close_latest",
+    "tickers": ["MSFT"]
+  },
+  {
+    "id": "recency_12",
+    "category": "recency",
+    "query": "Did TSLA close higher or lower than it opened on the most recent day?",
+    "answer_type": "directional",
+    "ground_truth_fn": "tsla_close_vs_open_latest",
+    "tickers": ["TSLA"]
+  },
+
+  {
+    "id": "trend_01",
+    "category": "trend",
+    "query": "Has MSFT been trending upward over the past month?",
+    "answer_type": "directional",
+    "ground_truth_fn": "msft_trend_last_month",
+    "tickers": ["MSFT"]
+  },
+  {
+    "id": "trend_02",
+    "category": "trend",
+    "query": "Has AAPL's stock price increased over the past 3 months?",
+    "answer_type": "directional",
+    "ground_truth_fn": "aapl_trend_3_months",
+    "tickers": ["AAPL"]
+  },
+  {
+    "id": "trend_03",
+    "category": "trend",
+    "query": "Has GOOG been trending upward over the past month?",
+    "answer_type": "directional",
+    "ground_truth_fn": "goog_trend_last_month",
+    "tickers": ["GOOG"]
+  },
+  {
+    "id": "trend_04",
+    "category": "trend",
+    "query": "Has TSLA's stock price increased over the past 3 months?",
+    "answer_type": "directional",
+    "ground_truth_fn": "tsla_trend_3_months",
+    "tickers": ["TSLA"]
+  },
+  {
+    "id": "trend_05",
+    "category": "trend",
+    "query": "What was the percentage change in AAPL's closing price over the past month?",
+    "answer_type": "numeric",
+    "ground_truth_fn": "aapl_pct_change_month",
+    "tickers": ["AAPL"]
+  },
+  {
+    "id": "trend_06",
+    "category": "trend",
+    "query": "What was the percentage change in MSFT's closing price over the past 3 months?",
+    "answer_type": "numeric",
+    "ground_truth_fn": "msft_pct_change_3_months",
+    "tickers": ["MSFT"]
+  },
+  {
+    "id": "trend_07",
+    "category": "trend",
+    "query": "Has GOOG's average trading volume increased over the last month compared to the previous month?",
+    "answer_type": "directional",
+    "ground_truth_fn": "goog_volume_trend_month",
+    "tickers": ["GOOG"]
+  },
+  {
+    "id": "trend_08",
+    "category": "trend",
+    "query": "What was the percentage change in TSLA's closing price over the past month?",
+    "answer_type": "numeric",
+    "ground_truth_fn": "tsla_pct_change_month",
+    "tickers": ["TSLA"]
+  },
+  {
+    "id": "trend_09",
+    "category": "trend",
+    "query": "Has AAPL been trending upward over the past week?",
+    "answer_type": "directional",
+    "ground_truth_fn": "aapl_trend_last_week",
+    "tickers": ["AAPL"]
+  },
+  {
+    "id": "trend_10",
+    "category": "trend",
+    "query": "What was the average closing price of MSFT over the past month?",
+    "answer_type": "numeric",
+    "ground_truth_fn": "msft_avg_close_month",
+    "tickers": ["MSFT"]
+  },
+  {
+    "id": "trend_11",
+    "category": "trend",
+    "query": "Has TSLA been trending upward over the past month?",
+    "answer_type": "directional",
+    "ground_truth_fn": "tsla_trend_last_month",
+    "tickers": ["TSLA"]
+  },
+  {
+    "id": "trend_12",
+    "category": "trend",
+    "query": "What was the average closing price of GOOG over the past 3 months?",
+    "answer_type": "numeric",
+    "ground_truth_fn": "goog_avg_close_3_months",
+    "tickers": ["GOOG"]
+  },
+
+  {
+    "id": "anomaly_01",
+    "category": "anomaly",
+    "query": "On which day did TSLA experience its largest single-day percentage drop?",
+    "answer_type": "exact",
+    "ground_truth_fn": "tsla_largest_drop_date",
+    "tickers": ["TSLA"]
+  },
+  {
+    "id": "anomaly_02",
+    "category": "anomaly",
+    "query": "On which day did AAPL experience its largest single-day percentage gain?",
+    "answer_type": "exact",
+    "ground_truth_fn": "aapl_largest_gain_date",
+    "tickers": ["AAPL"]
+  },
+  {
+    "id": "anomaly_03",
+    "category": "anomaly",
+    "query": "What was the highest single-day trading volume for MSFT?",
+    "answer_type": "numeric",
+    "ground_truth_fn": "msft_highest_volume",
+    "tickers": ["MSFT"]
+  },
+  {
+    "id": "anomaly_04",
+    "category": "anomaly",
+    "query": "On which day did GOOG have its largest single-day price drop?",
+    "answer_type": "exact",
+    "ground_truth_fn": "goog_largest_drop_date",
+    "tickers": ["GOOG"]
+  },
+  {
+    "id": "anomaly_05",
+    "category": "anomaly",
+    "query": "What was TSLA's largest single-day percentage gain?",
+    "answer_type": "numeric",
+    "ground_truth_fn": "tsla_largest_gain_pct",
+    "tickers": ["TSLA"]
+  },
+  {
+    "id": "anomaly_06",
+    "category": "anomaly",
+    "query": "On which day did AAPL have its highest trading volume?",
+    "answer_type": "exact",
+    "ground_truth_fn": "aapl_highest_volume_date",
+    "tickers": ["AAPL"]
+  },
+  {
+    "id": "anomaly_07",
+    "category": "anomaly",
+    "query": "What was the largest single-day percentage drop for MSFT?",
+    "answer_type": "numeric",
+    "ground_truth_fn": "msft_largest_drop_pct",
+    "tickers": ["MSFT"]
+  },
+  {
+    "id": "anomaly_08",
+    "category": "anomaly",
+    "query": "On which day did GOOG experience its largest single-day percentage gain?",
+    "answer_type": "exact",
+    "ground_truth_fn": "goog_largest_gain_date",
+    "tickers": ["GOOG"]
+  },
+  {
+    "id": "anomaly_09",
+    "category": "anomaly",
+    "query": "What was the lowest closing price AAPL reached over the entire period?",
+    "answer_type": "numeric",
+    "ground_truth_fn": "aapl_lowest_close",
+    "tickers": ["AAPL"]
+  },
+  {
+    "id": "anomaly_10",
+    "category": "anomaly",
+    "query": "What was the highest closing price TSLA reached over the entire period?",
+    "answer_type": "numeric",
+    "ground_truth_fn": "tsla_highest_close",
+    "tickers": ["TSLA"]
+  },
+  {
+    "id": "anomaly_11",
+    "category": "anomaly",
+    "query": "On which date did MSFT reach its highest closing price?",
+    "answer_type": "exact",
+    "ground_truth_fn": "msft_highest_close_date",
+    "tickers": ["MSFT"]
+  },
+  {
+    "id": "anomaly_12",
+    "category": "anomaly",
+    "query": "What was the highest single-day trading volume for TSLA?",
+    "answer_type": "numeric",
+    "ground_truth_fn": "tsla_highest_volume",
+    "tickers": ["TSLA"]
+  },
+
+  {
+    "id": "comparison_01",
+    "category": "comparison",
+    "query": "Which ticker had the highest average trading volume overall?",
+    "answer_type": "exact",
+    "ground_truth_fn": "highest_avg_volume_ticker",
+    "tickers": ["AAPL", "GOOG", "MSFT", "TSLA"]
+  },
+  {
+    "id": "comparison_02",
+    "category": "comparison",
+    "query": "Which ticker had the highest closing price on the most recent trading day?",
+    "answer_type": "exact",
+    "ground_truth_fn": "highest_close_latest_ticker",
+    "tickers": ["AAPL", "GOOG", "MSFT", "TSLA"]
+  },
+  {
+    "id": "comparison_03",
+    "category": "comparison",
+    "query": "Which stock experienced the largest single-day percentage drop over the entire period?",
+    "answer_type": "exact",
+    "ground_truth_fn": "largest_single_day_drop_ticker",
+    "tickers": ["AAPL", "GOOG", "MSFT", "TSLA"]
+  },
+  {
+    "id": "comparison_04",
+    "category": "comparison",
+    "query": "Which ticker had the best overall return from the start to the end of the period?",
+    "answer_type": "exact",
+    "ground_truth_fn": "best_total_return_ticker",
+    "tickers": ["AAPL", "GOOG", "MSFT", "TSLA"]
+  },
+  {
+    "id": "comparison_05",
+    "category": "comparison",
+    "query": "Which ticker had the highest average closing price over the entire period?",
+    "answer_type": "exact",
+    "ground_truth_fn": "highest_avg_close_ticker",
+    "tickers": ["AAPL", "GOOG", "MSFT", "TSLA"]
+  },
+  {
+    "id": "comparison_06",
+    "category": "comparison",
+    "query": "Which ticker had the most volatile daily price movements over the period?",
+    "answer_type": "exact",
+    "ground_truth_fn": "most_volatile_ticker",
+    "tickers": ["AAPL", "GOOG", "MSFT", "TSLA"]
+  },
+  {
+    "id": "comparison_07",
+    "category": "comparison",
+    "query": "Did AAPL have a higher average closing price than GOOG over the entire period?",
+    "answer_type": "directional",
+    "ground_truth_fn": "aapl_vs_goog_avg_close",
+    "tickers": ["AAPL", "GOOG"]
+  },
+  {
+    "id": "comparison_08",
+    "category": "comparison",
+    "query": "Which ticker had the lowest average trading volume overall?",
+    "answer_type": "exact",
+    "ground_truth_fn": "lowest_avg_volume_ticker",
+    "tickers": ["AAPL", "GOOG", "MSFT", "TSLA"]
+  },
+  {
+    "id": "comparison_09",
+    "category": "comparison",
+    "query": "Which ticker reached the highest closing price at any point during the period?",
+    "answer_type": "exact",
+    "ground_truth_fn": "highest_ever_close_ticker",
+    "tickers": ["AAPL", "GOOG", "MSFT", "TSLA"]
+  },
+  {
+    "id": "comparison_10",
+    "category": "comparison",
+    "query": "Did TSLA outperform MSFT in terms of total return over the period?",
+    "answer_type": "directional",
+    "ground_truth_fn": "tsla_vs_msft_total_return",
+    "tickers": ["TSLA", "MSFT"]
+  },
+  {
+    "id": "comparison_11",
+    "category": "comparison",
+    "query": "Which ticker had the smallest price range over the entire period?",
+    "answer_type": "exact",
+    "ground_truth_fn": "smallest_price_range_ticker",
+    "tickers": ["AAPL", "GOOG", "MSFT", "TSLA"]
+  },
+  {
+    "id": "comparison_12",
+    "category": "comparison",
+    "query": "Which ticker had the highest single-day trading volume at any point during the period?",
+    "answer_type": "exact",
+    "ground_truth_fn": "highest_single_day_volume_ticker",
+    "tickers": ["AAPL", "GOOG", "MSFT", "TSLA"]
+  }
+]

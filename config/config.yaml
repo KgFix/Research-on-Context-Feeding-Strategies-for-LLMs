@@ -1,0 +1,53 @@
+# ──────────────────────────────────────────────────────────────
+# Context-Feed Evaluation Pipeline — Configuration
+# All strategy parameters, model settings, and paths are here.
+# Values match strategy_specs.md (pinned 14 Jul 2026).
+# ──────────────────────────────────────────────────────────────
+
+data:
+  tickers: ["AAPL", "GOOG", "MSFT", "TSLA"]
+  start_date: "2025-07-01"
+  end_date: "2026-06-30"
+  cache_dir: "data/raw"
+
+buffer:
+  max_size: 250  # rows; ~1 quarter of daily data per ticker
+
+storage:
+  db_path: "data/db/historical_store.sqlite"
+
+strategies:
+  s1_naive:
+    window_size: 50  # most recent rows, no query awareness
+
+  s2_intent:
+    recency_window: 30            # rows for RECENCY sub-strategy
+    trend_recent: 5               # recent rows for TREND
+    trend_lookback_days: [30, 60, 90]
+    trend_samples_per_lookback: 3  # rows per lookback point
+    anomaly_k_before: 10          # rows before anomaly
+    anomaly_k_after: 5            # rows after anomaly
+    comparison_per_ticker: 20     # rows per ticker for COMPARISON
+
+  s3_embedding:
+    model_name: "all-MiniLM-L6-v2"
+    top_k: 20
+
+  s4_summary:
+    recent_window: 20       # recent raw rows to include
+    summary_max_words: 150  # target length for LLM-generated summary
+
+llm:
+  model: "mistral"                  # Using Mistral 7B for the evaluation
+  base_url: "http://localhost:11434"
+  temperature: 0.1                  # low for reproducibility
+  top_p: 0.9
+  seed: 42
+
+evaluation:
+  results_db: "data/db/results.sqlite"
+  numeric_tolerance: 0.01  # ±1% for continuous values
+
+judge:
+  model: null          # null = use same model as llm.model
+  temperature: 0.1
