@@ -69,8 +69,19 @@ class StreamBuffer:
 
     # ── Info ─────────────────────────────────────────────────
 
+    @property
+    def size(self) -> int:
+        """Current number of rows in the buffer."""
+        return len(self._buffer)
+
+    @property
+    def max_size(self) -> int:
+        """Maximum capacity of the buffer."""
+        return self._buffer.maxlen or 0
+
     def __len__(self) -> int:
         return len(self._buffer)
 
     def __repr__(self) -> str:
-        return f"StreamBuffer(size={len(self)}, max_size={self._buffer.maxlen})"
+        return f"StreamBuffer(size={len(self)}, max_size={self.max_size})"
+

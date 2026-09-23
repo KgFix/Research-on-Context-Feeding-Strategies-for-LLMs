@@ -24,6 +24,8 @@ from ctxfeed.strategies.s1_naive_window import NaiveWindowStrategy
 from ctxfeed.strategies.s2_intent_driven import IntentDrivenStrategy
 from ctxfeed.strategies.s3_embedding_retrieval import EmbeddingRetrievalStrategy
 from ctxfeed.strategies.s4_summarization import SummarisationStrategy
+from ctxfeed.strategies.s5_agentic import AgenticStrategy
+from ctxfeed.strategies.s6_sql_agent import SqlAgentStrategy
 from ctxfeed.llm.ollama_client import OllamaClient
 from ctxfeed.llm.prompts import ANALYST_SYSTEM_PROMPT, QUERY_PROMPT
 from ctxfeed.evaluation.answer_parser import parse_answer
@@ -55,6 +57,8 @@ def init_strategies(_config, _buffer, _store):
         "S2 — Intent-Driven": IntentDrivenStrategy(llm_client=client),
         "S3 — Embedding Retrieval": EmbeddingRetrievalStrategy(),
         "S4 — Summarisation": SummarisationStrategy(llm_client=client),
+        "S5 — Agentic Routing": AgenticStrategy(client=client),
+        "S6 — Text-to-SQL Agent (SOTA)": SqlAgentStrategy(llm_client=client),
     }
     return strategies, client
 
@@ -85,7 +89,7 @@ if not ollama_available:
     st.warning(
         f"⚠️ Ollama not available at {config.llm.base_url} "
         f"with model '{config.llm.model}'. "
-        f"S2 and S4 require Ollama. S1 and S3 work without it."
+        f"S2, S4, S5, and S6 require Ollama. S1 and S3 work without it."
     )
 
 strategies, client = init_strategies(config, buffer, store)
@@ -110,9 +114,11 @@ with st.sidebar:
     st.header("Sample Queries")
     sample_queries = [
         "What was AAPL's most recent closing price?",
+        "Which ticker had the highest average volume?",
         "Has MSFT been trending upward over the past month?",
         "On which day did TSLA have its largest single-day drop?",
-        "Which ticker had the highest average volume?",
+        "What was the highest closing price across all stocks?",
+        "Compare the average volume of AAPL and MSFT.",
     ]
     for sq in sample_queries:
         if st.button(sq, key=sq):
@@ -139,6 +145,22 @@ if query:
 
         st.metric("Rows selected", ctx.rows_selected)
 
+        # Strategy-specific UI enhancements
+        if strategy.name == "s6_sql_agent":
+            gen_sql = ctx.metadata.get("generated_sql")
+            if gen_sql:
+                st.markdown("##### ⚡ Generated SQL Query")
+                st.code(gen_sql, language="sql")
+            if ctx.metadata.get("used_fallback"):
+                st.warning(f"⚠️ SQL execution failed ({ctx.metadata.get('sql_error')}). Fell back to S1 Naive Window.")
+            else:
+                st.success("✅ Deterministic SQL executed directly against SQLite.")
+        elif strategy.name == "s5_agentic":
+            if ctx.metadata.get("used_fallback"):
+                st.warning("⚠️ Critique evaluated context as INSUFFICIENT — triggered expanded 100-row window.")
+            else:
+                st.success("✅ Critique evaluated S2 context as SUFFICIENT.")
+
         if ctx.metadata:
             with st.expander("Strategy metadata"):
                 st.json(ctx.metadata)
@@ -148,7 +170,8 @@ if query:
     with col2:
         st.subheader("🤖 LLM Response")
 
-        if not ollama_available and strategy.name in ("s2_intent", "s4_summary"):
+        llm_required_strategies = ("s2_intent", "s4_summary", "s5_agentic", "s6_sql_agent")
+        if not ollama_available and strategy.name in llm_required_strategies:
             st.error("This strategy requires Ollama to be running.")
         elif not ollama_available:
             # S1 and S3 can show context without LLM
