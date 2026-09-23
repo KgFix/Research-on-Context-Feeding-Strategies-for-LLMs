@@ -77,6 +77,41 @@ st.caption(
     "for LLM-based querying over streaming stock data."
 )
 
+# ── Custom CSS to prevent table column overflow & overlap ─────
+st.markdown(
+    """
+    <style>
+    /* Prevent flex column items from overflowing horizontally into adjacent columns */
+    [data-testid="column"] {
+        min-width: 0 !important;
+    }
+    
+    /* Make Markdown tables horizontally scrollable when wider than container */
+    .stMarkdown table {
+        display: block !important;
+        overflow-x: auto !important;
+        max-width: 100% !important;
+        white-space: nowrap !important;
+        border-collapse: collapse !important;
+    }
+    
+    .stMarkdown th, .stMarkdown td {
+        padding: 6px 12px !important;
+    }
+    
+    /* Sleek scrollbar for the table */
+    .stMarkdown table::-webkit-scrollbar {
+        height: 6px;
+    }
+    .stMarkdown table::-webkit-scrollbar-thumb {
+        background: #4a5568;
+        border-radius: 3px;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 # ── Initialise ───────────────────────────────────────────────
 
 config, data, buffer, store = init_pipeline()
@@ -135,8 +170,8 @@ query = st.text_input(
 if query:
     strategy = strategies[selected_strategy]
 
-    # Show context selection
-    col1, col2 = st.columns([1, 1])
+    # Show context selection with comfortable column spacing
+    col1, col2 = st.columns([1, 1], gap="large")
 
     with col1:
         st.subheader("📋 Selected Context")
