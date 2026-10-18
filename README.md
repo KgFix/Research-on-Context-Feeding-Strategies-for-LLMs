@@ -7,7 +7,7 @@
 **UKZN Computer Science Honours Research Project (COMP700, 2026)**  
 * **Author:** Kirone Gopaul (Student No. 223014456)  
 * **Supervisor:** Dr. Okuthe P. Kogeda  
-* **Affiliation:** College of Agriculture, Engineering & Science, University of KwaZulu-Natal, South Africa  
+* **Affiliation:** College of Agriculture and Science, University of KwaZulu-Natal, South Africa  
 * **Repository:** [https://github.com/KgFix/Research-on-Context-Feeding-Strategies-for-LLMs](https://github.com/KgFix/Research-on-Context-Feeding-Strategies-for-LLMs)
 
 ---
@@ -327,7 +327,7 @@ If you find this codebase or research useful, please cite:
   title        = {A Comparative Evaluation of Context-Feeding Strategies for LLM-Based Natural Language Querying over Streaming Tabular Data},
   year         = {2026},
   institution  = {University of KwaZulu-Natal},
-  school       = {College of Agriculture, Engineering & Science},
+  school       = {College of Agriculture and Science},
   howpublished = {\url{https://github.com/KgFix/Research-on-Context-Feeding-Strategies-for-LLMs}}
 }
 ```
