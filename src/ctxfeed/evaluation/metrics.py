@@ -1,13 +1,5 @@
-"""Accuracy scoring for different query types.
-
-Per strategy_specs.md, accuracy is split into three types:
-- Exact match: for categorical answers (ticker, date, yes/no)
-- Tolerance-based: ±1% for continuous values (prices, volumes)
-- Directional: agreement on trend direction (up/down)
-
-Each query in the benchmark specifies its answer_type, which
-determines which scoring function is used.
-"""
+# accuracy scoring across benchmark query types
+# handles exact match, relative tolerance (+-1%), and directional trend agreement
 
 from __future__ import annotations
 
@@ -21,17 +13,8 @@ def score_accuracy(
     answer_type: str,
     tolerance: float = 0.01,
 ) -> float:
-    """Score the accuracy of a predicted answer against ground truth.
+    # returns 1.0 if correct, 0.0 otherwise
 
-    Args:
-        predicted: The extracted answer from the LLM (may be None).
-        ground_truth: The correct answer.
-        answer_type: One of "exact", "numeric", "directional".
-        tolerance: Relative tolerance for numeric comparisons (default ±1%).
-
-    Returns:
-        1.0 for correct, 0.0 for incorrect.
-    """
     if predicted is None:
         return 0.0
 
@@ -42,20 +25,17 @@ def score_accuracy(
     elif answer_type == "directional":
         return _score_directional(predicted, ground_truth)
     else:
-        # Unknown type — fall back to exact match
+        # unknown type, fall back to exact match
         return _score_exact(predicted, ground_truth)
 
 
 def _score_exact(predicted: str, ground_truth: str) -> float:
-    """Case-insensitive, whitespace-trimmed exact match."""
+    # case-insensitive whitespace-trimmed exact match
     return 1.0 if predicted.strip().upper() == ground_truth.strip().upper() else 0.0
 
 
 def _score_numeric(predicted: str, ground_truth: str, tolerance: float) -> float:
-    """Tolerance-based numeric comparison (±tolerance relative).
-
-    Extracts the first number found in each string and compares.
-    """
+    # numeric comparison within relative tolerance
     pred_num = _extract_number(predicted)
     truth_num = _extract_number(ground_truth)
 
@@ -70,10 +50,7 @@ def _score_numeric(predicted: str, ground_truth: str, tolerance: float) -> float
 
 
 def _score_directional(predicted: str, ground_truth: str) -> float:
-    """Check if predicted and ground truth agree on direction.
-
-    Handles: up/down, yes/no, upward/downward, increase/decrease.
-    """
+    # check direction agreement (up/down, yes/no, increase/decrease)
     pred_dir = _classify_direction(predicted)
     truth_dir = _classify_direction(ground_truth)
 

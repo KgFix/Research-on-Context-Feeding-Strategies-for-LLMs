@@ -1,15 +1,5 @@
-"""S1 — Naive Fixed Window (Baseline Strategy).
-
-Selects the most recent N rows from the stream buffer with no
-awareness of the query content. This is the control condition —
-the simplest possible approach.
-
-Per strategy_specs.md:
-- Window size: 50 rows (configurable via config.strategies.s1_naive.window_size)
-- No query awareness
-- No ticker filtering — all tickers in the window are included
-- Rows sorted ascending (chronological)
-"""
+# s1: naive fixed window baseline
+# grabs the most recent n rows from buffer regardless of the query
 
 from __future__ import annotations
 
@@ -21,8 +11,6 @@ from ctxfeed.strategies.base import ContextResult, Strategy
 
 
 class NaiveWindowStrategy(Strategy):
-    """Baseline: last N rows from the buffer, no query analysis."""
-
     @property
     def name(self) -> str:
         return "s1_naive"
@@ -34,17 +22,8 @@ class NaiveWindowStrategy(Strategy):
         store: HistoricalStore,
         config: Config,
     ) -> ContextResult:
-        """Select the most recent N rows regardless of query content.
+        # take latest n rows and dump to markdown table
 
-        Args:
-            query: The natural language query (ignored by this strategy).
-            buffer: The in-memory stream buffer.
-            store: The historical store (unused by this strategy).
-            config: Pipeline configuration.
-
-        Returns:
-            ContextResult with the formatted Markdown table.
-        """
         n = config.strategies.s1_naive.window_size
         df = buffer.get_latest(n)
         context_text = df_to_markdown(df)

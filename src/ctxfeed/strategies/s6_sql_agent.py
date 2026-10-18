@@ -1,3 +1,7 @@
+# s6: text-to-sql code generation strategy
+# translates natural language question into sql, runs against sqlite store
+# falls back to s1 naive window if generation or execution fails
+
 import logging
 import re
 import pandas as pd
@@ -34,13 +38,6 @@ Question: "{query}"
 """
 
 class SqlAgentStrategy(Strategy):
-    """S6: State-of-the-art Agentic Text-to-SQL.
-    
-    Translates the query into a SQL query, executes it against the HistoricalStore,
-    and returns the SQL execution results as the context.
-    If SQL generation or execution fails, it falls back to S1 Naive Window.
-    """
-
     def __init__(self, llm_client: OllamaClient) -> None:
         self.llm_client = llm_client
         self.fallback_strategy = NaiveWindowStrategy()
@@ -50,7 +47,8 @@ class SqlAgentStrategy(Strategy):
         return "s6_sql_agent"
 
     def _extract_sql(self, llm_response: str) -> str:
-        """Extract the SQL query from the LLM response, stripping markdown/text."""
+        # strip ```sql backticks if model wrapped output in markdown
+
         # Remove ```sql ... ``` if present
         match = re.search(r"```(?:sql)?\s*(.*?)\s*```", llm_response, re.DOTALL | re.IGNORECASE)
         if match:
@@ -83,7 +81,7 @@ class SqlAgentStrategy(Strategy):
         metadata: dict[str, Any] = {"used_fallback": False, "generated_sql": None, "sql_error": None}
         
         try:
-            # 1. Generate SQL
+            # generate sql from model
             llm_response, _ = self.llm_client.generate(prompt)
             sql_query = self._extract_sql(llm_response)
             metadata["generated_sql"] = sql_query
@@ -93,13 +91,10 @@ class SqlAgentStrategy(Strategy):
             if not sql_query.upper().startswith("SELECT"):
                 raise ValueError(f"Invalid SQL generated: {sql_query}")
 
-            # 2. Execute SQL
+            # execute sql against historical store
             df = pd.read_sql_query(sql_query, store._conn)
             
-            # If the dataframe is empty, the LLM might have queried non-existent dates.
-            # But technically it's a valid SQL execution. We'll pass the empty df.
-            
-            # 3. Format result
+            # format results table
             context_text = f"--- DATABASE SQL QUERY RESULT ---\n"
             context_text += f"Query Executed: {sql_query}\n\n"
             if df.empty:

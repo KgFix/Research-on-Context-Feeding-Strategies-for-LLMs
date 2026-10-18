@@ -1,12 +1,5 @@
-"""Convert DataFrames and row dicts to Markdown tables and text strings.
-
-All strategies format their selected context as Markdown tables before
-injection into the LLM prompt. This module provides the shared formatting
-logic so every strategy produces consistent output.
-
-The row_to_text() function is used specifically by S3 (embedding retrieval)
-to encode individual rows as text strings for embedding.
-"""
+# formats dataframes into markdown tables for prompt context
+# also has helper to turn a row dict into a string for s3 embedding
 
 from __future__ import annotations
 
@@ -14,30 +7,20 @@ import pandas as pd
 
 
 def df_to_markdown(df: pd.DataFrame, highlight_rows: set[int] | None = None) -> str:
-    """Convert a DataFrame to a Markdown table string.
-
-    Args:
-        df: DataFrame with OHLCV columns.
-        highlight_rows: Optional set of integer index positions to prefix
-            with '>>> ' (used by S2-ANOMALY to mark the anomaly row).
-
-    Returns:
-        A Markdown-formatted table string. Empty DataFrame returns
-        "(no data)".
-    """
+    # convert df to markdown table string for prompt injection
     if df.empty:
         return "(no data)"
 
-    # Standardise column display order
+    # standard column order across tables
     display_cols = ["date", "ticker", "open", "high", "low", "close", "volume"]
     cols = [c for c in display_cols if c in df.columns]
     table_df = df[cols].copy()
 
-    # Header
+    # markdown header
     headers = "| " + " | ".join(col.title() for col in cols) + " |"
     separator = "| " + " | ".join("---" for _ in cols) + " |"
 
-    # Rows
+    # rows
     lines = [headers, separator]
     for idx, (_, row) in enumerate(table_df.iterrows()):
         values = []
@@ -54,6 +37,7 @@ def df_to_markdown(df: pd.DataFrame, highlight_rows: set[int] | None = None) -> 
 
         line = "| " + " | ".join(values) + " |"
 
+        # mark anomaly row with prefix if requested
         if highlight_rows and idx in highlight_rows:
             line = ">>> " + line
 
@@ -63,13 +47,8 @@ def df_to_markdown(df: pd.DataFrame, highlight_rows: set[int] | None = None) -> 
 
 
 def row_to_text(row: dict) -> str:
-    """Convert a single OHLCV row dict to a text string for embedding.
+    # format single row into text representation for sentence-transformer
 
-    Format: "AAPL | 2026-06-03 | Open: 195.20 | High: 198.50 | ..."
-
-    Used by S3 (embedding retrieval) to create text representations
-    that are then encoded by the sentence transformer.
-    """
     return (
         f"{row['ticker']} | {row['date']} | "
         f"Open: {float(row['open']):.2f} | "

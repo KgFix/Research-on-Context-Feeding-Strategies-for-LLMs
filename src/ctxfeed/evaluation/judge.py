@@ -1,14 +1,5 @@
-"""LLM-as-judge relevance scoring.
-
-Makes a separate LLM call to rate the quality of an LLM response
-on a 1-5 scale, independent from the accuracy metric.
-
-Per strategy_specs.md:
-- Same model (Mistral 7B) as judge
-- Low temperature (0.1) for consistency
-- Returns a single integer 1-5
-- Self-judging bias acknowledged as a limitation
-"""
+# llm-as-judge relevance scoring on 1-5 scale
+# calls mistral with low temperature (0.1) for consistency
 
 from __future__ import annotations
 
@@ -30,20 +21,8 @@ def judge_response(
     client: OllamaClient,
     config: Config,
 ) -> tuple[Optional[int], str]:
-    """Rate an LLM response using the LLM-as-judge method.
+    # returns (score_1_to_5, raw_justification_text)
 
-    Args:
-        query: The original natural language query.
-        response: The LLM's full response text.
-        ground_truth: The correct answer for comparison.
-        client: Ollama client for making the judge call.
-        config: Pipeline configuration (for judge model override).
-
-    Returns:
-        Tuple of (score, justification).
-        Score is 1-5 or None if parsing failed.
-        Justification is the judge's reasoning text.
-    """
     prompt = JUDGE_PROMPT.format(
         query=query,
         response=response,

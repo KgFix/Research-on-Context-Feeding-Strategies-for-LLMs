@@ -1,20 +1,6 @@
-"""S3 — Embedding-Based Retrieval Strategy.
-
-Encodes each data row as a text string, embeds it using a sentence
-transformer, and retrieves the top-k rows most similar to the query
-embedding by cosine similarity.
-
-Per strategy_specs.md:
-- Embedding model: all-MiniLM-L6-v2
-- Top-k: 20 rows
-- Embeddings computed once at startup, cached in memory
-- Retrieved rows sorted chronologically (not by similarity score)
-
-Known limitation: all-MiniLM-L6-v2 is designed for natural language
-text, not numerical OHLCV rows. Embeddings will be dominated by
-textual structure (ticker names, column labels) with limited
-sensitivity to numerical magnitude or temporal ordering.
-"""
+# s3: embedding-based retrieval strategy
+# turns each ohlcv row into text, embeds with sentence-transformers, takes top-k by cosine similarity
+# note: all-MiniLM was trained on text not financial numbers, so similarity matches tickers/labels better than numbers
 
 from __future__ import annotations
 
@@ -34,12 +20,6 @@ logger = logging.getLogger(__name__)
 
 
 class EmbeddingRetrievalStrategy(Strategy):
-    """Retrieves the top-k rows most semantically similar to the query.
-
-    The embedding index is built lazily on the first call to
-    select_context() and cached for subsequent calls.
-    """
-
     def __init__(self) -> None:
         self._model = None
         self._embeddings: Optional[np.ndarray] = None
@@ -56,8 +36,9 @@ class EmbeddingRetrievalStrategy(Strategy):
         store: HistoricalStore,
         config: Config,
     ) -> ContextResult:
-        """Embed the query and retrieve the top-k most similar rows."""
+        # embed query and pull top-k nearest rows
         cfg = config.strategies.s3_embedding
+
 
         # Build index on first call
         if self._embeddings is None:
@@ -91,10 +72,7 @@ class EmbeddingRetrievalStrategy(Strategy):
         )
 
     def _build_index(self, store: HistoricalStore, model_name: str) -> None:
-        """Build the embedding index from all rows in the historical store.
-
-        Called once, lazily. Embeddings are cached in memory.
-        """
+        # build embedding index from sqlite history (cached in memory)
         from sentence_transformers import SentenceTransformer
 
         logger.info("Building embedding index with %s...", model_name)
@@ -104,7 +82,7 @@ class EmbeddingRetrievalStrategy(Strategy):
 
         if self._rows.empty:
             self._embeddings = np.array([])
-            logger.warning("Historical store is empty — no embeddings built")
+            logger.warning("Historical store is empty: no embeddings built")
             return
 
         # Convert each row to text
@@ -121,21 +99,13 @@ class EmbeddingRetrievalStrategy(Strategy):
 
 
 def _cosine_similarity(query_vec: np.ndarray, matrix: np.ndarray) -> np.ndarray:
-    """Compute cosine similarity between a query vector and a matrix of vectors.
-
-    Args:
-        query_vec: 1D array (embedding dimension).
-        matrix: 2D array (n_rows × embedding dimension).
-
-    Returns:
-        1D array of similarities (n_rows).
-    """
+    # dot product of l2-normalized embeddings
     if matrix.size == 0:
         return np.array([])
 
-    # Normalise
     query_norm = query_vec / (np.linalg.norm(query_vec) + 1e-10)
     matrix_norms = np.linalg.norm(matrix, axis=1, keepdims=True) + 1e-10
     matrix_normed = matrix / matrix_norms
 
     return matrix_normed @ query_norm
+

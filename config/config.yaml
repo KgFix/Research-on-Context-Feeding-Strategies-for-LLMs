@@ -1,8 +1,5 @@
-# ──────────────────────────────────────────────────────────────
-# Context-Feed Evaluation Pipeline — Configuration
-# All strategy parameters, model settings, and paths are here.
-# Values match strategy_specs.md (pinned 14 Jul 2026).
-# ──────────────────────────────────────────────────────────────
+# Context-Feed Pipeline Config
+# experiment params, buffer sizes, paths, llm settings
 
 data:
   tickers: ["AAPL", "GOOG", "MSFT", "TSLA"]

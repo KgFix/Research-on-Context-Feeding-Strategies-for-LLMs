@@ -1,11 +1,5 @@
-"""Script 02: Run the full evaluation sweep.
-
-Usage:
-    uv run python scripts/02_run_evaluation.py
-    uv run python scripts/02_run_evaluation.py --skip-judge    # no judge scoring
-    uv run python scripts/02_run_evaluation.py --skip-ragas    # no RAGAS scoring
-    uv run python scripts/02_run_evaluation.py --skip-judge --skip-ragas  # fastest
-"""
+# runs evaluation benchmark sweep across strategies
+# saves output to data/db/results.sqlite
 
 import sys
 sys.path.insert(0, "src")
@@ -46,7 +40,7 @@ def main():
     setup_logging()
     config = Config.from_yaml("config/config.yaml")
 
-    # 1. Fetch data
+    # fetch data
     print("=== Fetching data ===")
     data = fetch_stock_data(
         tickers=config.data.tickers,
@@ -55,16 +49,17 @@ def main():
         cache_dir=config.data.cache_dir,
     )
 
-    # 2. Set up storage
+    # init stream buffer and historical sqlite db
     buffer = StreamBuffer(max_size=config.buffer.max_size)
     store = HistoricalStore(config.storage.db_path)
 
-    # 3. Replay data into buffer + store
+    # replay data into buffer + store
     print("=== Replaying data ===")
     replay_all(data, buffer, store)
     print(f"Buffer: {buffer}, Store: {store}")
 
-    # 4. Set up LLM client
+
+    # init ollama client
     client = OllamaClient(config.llm)
     if not client.is_available():
         print(f"\nERROR: Ollama not available at {config.llm.base_url}")
@@ -72,7 +67,7 @@ def main():
         print("Run: ollama serve  and  ollama pull " + config.llm.model)
         sys.exit(1)
 
-    # 5. Register strategies
+    # register all 6 strategies for benchmark
     register_strategy(NaiveWindowStrategy())
     register_strategy(IntentDrivenStrategy(llm_client=client))
     register_strategy(EmbeddingRetrievalStrategy())
@@ -82,11 +77,11 @@ def main():
     strategies = get_all_strategies()
     print(f"Strategies: {list(strategies.keys())}")
 
-    # 6. Load benchmark
+    # load benchmark queries
     queries = load_benchmark("benchmarks/benchmark_queries.json")
     print(f"Benchmark: {len(queries)} queries")
 
-    # 7. Run evaluation
+    # execute evaluation sweep
     print("=== Running evaluation ===")
     results_store = ResultsStore(config.evaluation.results_db)
     results = run_evaluation(
@@ -102,13 +97,14 @@ def main():
         skip_ragas=args.skip_ragas,
     )
 
-    # 8. Summary
+    # print quick summary table
     print(f"\n=== Results: {len(results)} rows ===")
     print(results.groupby("strategy_name")[["accuracy", "latency_ms"]].mean().to_string())
 
-    # Cleanup
+    # close sqlite db handles
     store.close()
     results_store.close()
+
 
 
 if __name__ == "__main__":

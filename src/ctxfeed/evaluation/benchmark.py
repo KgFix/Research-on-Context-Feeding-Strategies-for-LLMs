@@ -1,21 +1,5 @@
-"""Benchmark query loader and validator.
-
-Loads the benchmark_queries.json file, validates required fields,
-and provides access to query objects for the evaluation runner.
-
-Expected JSON structure:
-[
-  {
-    "id": "recency_01",
-    "category": "recency",
-    "query": "What was AAPL's closing price on 2026-06-03?",
-    "answer_type": "numeric",
-    "ground_truth_fn": "aapl_close_2026_06_03",
-    "tickers": ["AAPL"]
-  },
-  ...
-]
-"""
+# benchmark query loader and validator
+# reads benchmarks/benchmark_queries.json into BenchmarkQuery objects
 
 from __future__ import annotations
 
@@ -27,30 +11,18 @@ from typing import Optional
 
 @dataclass
 class BenchmarkQuery:
-    """A single benchmark query with metadata."""
-
     id: str
     category: str         # recency, trend, anomaly, comparison
-    query: str            # The natural language question
+    query: str            # question text
     answer_type: str      # exact, numeric, directional
-    ground_truth_fn: str  # Key into ground_truth.py functions
-    tickers: list[str]    # Tickers relevant to this query
-    ground_truth: Optional[str] = None  # Populated at runtime
+    ground_truth_fn: str  # maps to ground_truth.py function
+    tickers: list[str]    # target tickers
+    ground_truth: Optional[str] = None  # computed during run
 
 
 def load_benchmark(path: str | Path) -> list[BenchmarkQuery]:
-    """Load and validate the benchmark query set.
+    # load and validate json query benchmark
 
-    Args:
-        path: Path to benchmark_queries.json.
-
-    Returns:
-        List of validated BenchmarkQuery objects.
-
-    Raises:
-        FileNotFoundError: If the benchmark file doesn't exist.
-        ValueError: If any query is missing required fields.
-    """
     path = Path(path)
     with path.open() as f:
         raw = json.load(f)

@@ -1,18 +1,14 @@
-"""Consistency check: verify config.yaml values match strategy_specs.md.
-
-Run after uv sync completes:
-    uv run python scratch/verify_config.py
-"""
+# quick sanity check to verify config.yaml loads without issues
+# usage: uv run python scratch/verify_config.py
 
 import sys
 sys.path.insert(0, "src")
 
 from ctxfeed.config import Config
 
-# Load from YAML
 cfg = Config.from_yaml("config/config.yaml")
 
-# Expected values from strategy_specs.md (pinned 14 Jul 2026)
+# expected config params for the eval runs
 checks = [
     ("buffer.max_size", cfg.buffer.max_size, 250),
     ("s1_naive.window_size", cfg.strategies.s1_naive.window_size, 50),
@@ -27,7 +23,7 @@ checks = [
     ("s3_embedding.top_k", cfg.strategies.s3_embedding.top_k, 20),
     ("s4_summary.recent_window", cfg.strategies.s4_summary.recent_window, 20),
     ("s4_summary.summary_max_words", cfg.strategies.s4_summary.summary_max_words, 150),
-    ("llm.model", cfg.llm.model, "phi3:mini"),
+    ("llm.model", cfg.llm.model, "mistral"),
     ("llm.temperature", cfg.llm.temperature, 0.1),
     ("llm.top_p", cfg.llm.top_p, 0.9),
     ("llm.seed", cfg.llm.seed, 42),
@@ -40,15 +36,16 @@ passed = 0
 failed = 0
 for name, actual, expected in checks:
     if actual == expected:
-        print(f"  OK  {name} = {actual}")
+        print(f"  OK    {name} = {actual}")
         passed += 1
     else:
         print(f"  FAIL  {name}: expected {expected}, got {actual}")
         failed += 1
 
-print(f"\n{'='*50}")
-print(f"Results: {passed} passed, {failed} failed")
+print(f"\n{'-'*45}")
+print(f"sanity check: {passed} passed, {failed} failed")
 if failed:
     sys.exit(1)
 else:
-    print("All config values match strategy_specs.md")
+    print("all config parameters look good")
+

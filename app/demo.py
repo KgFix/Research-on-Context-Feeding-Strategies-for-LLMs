@@ -1,13 +1,5 @@
-"""Streamlit demo: interactive querying with strategy selection.
-
-Run:
-    uv run streamlit run app/demo.py
-
-Lets you type a natural language query, choose a strategy, and see:
-- The context selected by that strategy
-- The LLM response
-- The accuracy score (if a matching benchmark query exists)
-"""
+# streamlit interactive demo for testing context-feeding strategies
+# run: uv run streamlit run app/demo.py
 
 import sys
 sys.path.insert(0, "src")
@@ -31,12 +23,10 @@ from ctxfeed.llm.prompts import ANALYST_SYSTEM_PROMPT, QUERY_PROMPT
 from ctxfeed.evaluation.answer_parser import parse_answer
 
 
-# ── Session state setup ──────────────────────────────────────
-
+# --- pipeline cache ---
 
 @st.cache_resource
 def init_pipeline():
-    """Load config, fetch data, build buffer and store. Cached across reruns."""
     config = Config.from_yaml("config/config.yaml")
     data = fetch_stock_data(
         config.data.tickers, config.data.start_date,
@@ -50,20 +40,19 @@ def init_pipeline():
 
 @st.cache_resource
 def init_strategies(_config, _buffer, _store):
-    """Instantiate all strategies. Cached across reruns."""
     client = OllamaClient(_config.llm)
     strategies = {
-        "S1 — Naive Window": NaiveWindowStrategy(),
-        "S2 — Intent-Driven": IntentDrivenStrategy(llm_client=client),
-        "S3 — Embedding Retrieval": EmbeddingRetrievalStrategy(),
-        "S4 — Summarisation": SummarisationStrategy(llm_client=client),
-        "S5 — Agentic Routing": AgenticStrategy(client=client),
-        "S6 — Text-to-SQL Agent (SOTA)": SqlAgentStrategy(llm_client=client),
+        "S1: Naive Window": NaiveWindowStrategy(),
+        "S2: Intent-Driven": IntentDrivenStrategy(llm_client=client),
+        "S3: Embedding Retrieval": EmbeddingRetrievalStrategy(),
+        "S4: Summarisation": SummarisationStrategy(llm_client=client),
+        "S5: Agentic Routing": AgenticStrategy(client=client),
+        "S6: Text-to-SQL Agent (SOTA)": SqlAgentStrategy(llm_client=client),
     }
     return strategies, client
 
 
-# ── Page config ──────────────────────────────────────────────
+# --- streamlit page setup ---
 
 st.set_page_config(
     page_title="Context-Feed Evaluation Demo",
@@ -77,7 +66,7 @@ st.caption(
     "for LLM-based querying over streaming stock data."
 )
 
-# ── Custom CSS to prevent table column overflow & overlap ─────
+# --- custom css for table scrolling ---
 st.markdown(
     """
     <style>
@@ -112,7 +101,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# ── Initialise ───────────────────────────────────────────────
+# --- initialise backend ---
 
 config, data, buffer, store = init_pipeline()
 
@@ -129,13 +118,14 @@ if not ollama_available:
 
 strategies, client = init_strategies(config, buffer, store)
 
-# ── Sidebar: data overview ───────────────────────────────────
+# --- sidebar controls ---
+
 
 with st.sidebar:
     st.header("Data Overview")
     st.metric("Total rows", len(data))
     st.metric("Tickers", ", ".join(config.data.tickers))
-    st.metric("Date range", f"{data['date'].min()} — {data['date'].max()}")
+    st.metric("Date range", f"{data['date'].min()} to {data['date'].max()}")
     st.metric("Buffer size", f"{buffer.size}/{buffer.max_size}")
 
     st.divider()
@@ -159,7 +149,7 @@ with st.sidebar:
         if st.button(sq, key=sq):
             st.session_state["query_input"] = sq
 
-# ── Main area: query input ───────────────────────────────────
+# --- main area: query input ---
 
 query = st.text_input(
     "Enter your query:",
@@ -192,7 +182,7 @@ if query:
                 st.success("✅ Deterministic SQL executed directly against SQLite.")
         elif strategy.name == "s5_agentic":
             if ctx.metadata.get("used_fallback"):
-                st.warning("⚠️ Critique evaluated context as INSUFFICIENT — triggered expanded 100-row window.")
+                st.warning("⚠️ Critique evaluated context as INSUFFICIENT: triggered expanded 100-row window.")
             else:
                 st.success("✅ Critique evaluated S2 context as SUFFICIENT.")
 
@@ -211,7 +201,7 @@ if query:
         elif not ollama_available:
             # S1 and S3 can show context without LLM
             st.info(
-                "Ollama not available — showing context only. "
+                "Ollama not available: showing context only. "
                 "Start Ollama to get LLM responses."
             )
             # Show what the prompt would look like
@@ -239,10 +229,10 @@ if query:
             with st.expander("Full prompt"):
                 st.code(full_prompt, language="markdown")
 
-# ── Footer ───────────────────────────────────────────────────
+# --- footer ---
 
 st.divider()
 st.caption(
-    "Context-Feed Evaluation Pipeline — "
-    "UKZN CS Honours 2026 — Kirone Gopaul"
+    "Context-Feed Evaluation Pipeline | "
+    "UKZN CS Honours 2026 - Kirone Gopaul"
 )

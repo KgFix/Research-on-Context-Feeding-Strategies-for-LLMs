@@ -1,14 +1,5 @@
-"""Ground truth computation functions.
-
-Each function computes the correct answer from the actual data at evaluation
-time — not as a hardcoded value. If you re-download data, ground truth
-auto-updates.
-
-Functions are registered by name via @register("name"). The name must match
-the 'ground_truth_fn' field in benchmarks/benchmark_queries.json.
-
-To add a new query: write a @register function here, add the JSON entry.
-"""
+# ground truth computation functions
+# computes ground truth answers directly from raw dataframe data for all 48 queries
 
 from __future__ import annotations
 
@@ -16,14 +7,11 @@ from typing import Callable
 
 import pandas as pd
 
-# ── Registry ──────────────────────────────────────────────────
-
+# --- registry ---
 GROUND_TRUTH_REGISTRY: dict[str, Callable[[pd.DataFrame], str]] = {}
 
 
 def register(name: str):
-    """Decorator to register a ground truth function by name."""
-
     def wrapper(fn: Callable[[pd.DataFrame], str]):
         GROUND_TRUTH_REGISTRY[name] = fn
         return fn
@@ -32,18 +20,6 @@ def register(name: str):
 
 
 def compute_ground_truth(fn_name: str, data: pd.DataFrame) -> str:
-    """Look up and execute a ground truth function.
-
-    Args:
-        fn_name: The function name (from benchmark_queries.json).
-        data: The full historical DataFrame.
-
-    Returns:
-        String representation of the correct answer.
-
-    Raises:
-        KeyError: If fn_name is not registered.
-    """
     if fn_name not in GROUND_TRUTH_REGISTRY:
         available = ", ".join(sorted(GROUND_TRUTH_REGISTRY.keys())) or "(none)"
         raise KeyError(
@@ -52,17 +28,15 @@ def compute_ground_truth(fn_name: str, data: pd.DataFrame) -> str:
     return GROUND_TRUTH_REGISTRY[fn_name](data)
 
 
-# ── Helpers ───────────────────────────────────────────────────
-
+# --- dataframe helpers ---
 
 def _ticker(data: pd.DataFrame, t: str) -> pd.DataFrame:
-    """Filter to one ticker, sorted ascending by date."""
     return data[data["ticker"] == t].sort_values("date").reset_index(drop=True)
 
 
 def _latest(data: pd.DataFrame, t: str) -> pd.Series:
-    """Most recent row for a ticker."""
     return _ticker(data, t).iloc[-1]
+
 
 
 def _tail(data: pd.DataFrame, t: str, n: int) -> pd.DataFrame:

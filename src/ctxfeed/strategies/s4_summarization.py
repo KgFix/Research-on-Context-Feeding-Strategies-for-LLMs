@@ -1,16 +1,5 @@
-"""S4 — Summarisation-Augmented Context Strategy.
-
-Uses the LLM to generate a natural language summary of older
-historical data for a ticker, then prepends that summary to a
-window of recent rows. Combines breadth (summary of long history)
-with recency (recent raw data).
-
-Per strategy_specs.md:
-- Recent window (M): 20 rows for the queried ticker
-- Summary: one LLM call per ticker, cached for the entire evaluation
-- Summary scope: full historical data excluding the M recent rows
-- Target summary length: ~150 words
-"""
+# s4: summarisation-augmented context
+# generates an llm summary of older historical data, cached per ticker, then adds recent raw rows
 
 from __future__ import annotations
 
@@ -28,19 +17,11 @@ from ctxfeed.strategies.base import ContextResult, Strategy
 
 logger = logging.getLogger(__name__)
 
-# Known tickers for extraction
+# supported ticker symbols
 _KNOWN_TICKERS = {"AAPL", "GOOG", "MSFT", "TSLA"}
 
 
 class SummarisationStrategy(Strategy):
-    """Prepends an LLM-generated historical summary to recent raw data.
-
-    Summaries are cached per ticker and reused across queries.
-
-    Args:
-        llm_client: Ollama client for generating summaries.
-    """
-
     def __init__(self, llm_client: OllamaClient) -> None:
         self._client = llm_client
         self._summary_cache: dict[str, str] = {}
@@ -56,8 +37,9 @@ class SummarisationStrategy(Strategy):
         store: HistoricalStore,
         config: Config,
     ) -> ContextResult:
-        """Build context: cached summary + recent raw data."""
+        # build context: cached summary + recent raw rows
         cfg = config.strategies.s4_summary
+
         ticker = self._extract_ticker(query)
 
         # Get recent rows
@@ -102,11 +84,7 @@ class SummarisationStrategy(Strategy):
         cfg,
         config: Config,
     ) -> str:
-        """Return a cached summary or generate a new one.
-
-        Summaries are generated once per ticker and reused for all
-        queries about that ticker during the evaluation.
-        """
+        # return cached summary or generate once per ticker
         if ticker in self._summary_cache:
             logger.debug("Using cached summary for %s", ticker)
             return self._summary_cache[ticker]
@@ -145,7 +123,7 @@ class SummarisationStrategy(Strategy):
 
     @staticmethod
     def _extract_ticker(query: str) -> Optional[str]:
-        """Extract a single ticker symbol from the query text."""
+        # pull single ticker from query if present
         upper = query.upper()
         for ticker in _KNOWN_TICKERS:
             if re.search(rf"\b{ticker}\b", upper):

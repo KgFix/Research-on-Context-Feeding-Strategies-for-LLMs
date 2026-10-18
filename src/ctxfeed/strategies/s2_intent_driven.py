@@ -1,15 +1,5 @@
-"""S2 — Query-Intent-Driven Windowing Strategy.
-
-Classifies the query into one of four intent categories via a zero-shot
-LLM call, then dispatches to a specialised sub-strategy that selects
-contextually appropriate data.
-
-Per strategy_specs.md:
-- RECENCY: Last 30 rows for the queried ticker
-- TREND:   Last 5 rows + stratified samples at 30/60/90 days back (3 per point)
-- ANOMALY: 10 rows before + anomaly row + 5 rows after the largest daily move
-- COMPARISON: Last 20 rows per queried ticker, interleaved chronologically
-"""
+# s2: query-intent-driven windowing
+# classifies query into recency/trend/anomaly/comparison then slices data accordingly
 
 from __future__ import annotations
 
@@ -32,12 +22,6 @@ logger = logging.getLogger(__name__)
 
 
 class IntentDrivenStrategy(Strategy):
-    """Classifies query intent, then applies a matched sub-strategy.
-
-    Args:
-        llm_client: Ollama client for the intent classification call.
-    """
-
     def __init__(self, llm_client: OllamaClient) -> None:
         self._client = llm_client
 
@@ -52,7 +36,7 @@ class IntentDrivenStrategy(Strategy):
         store: HistoricalStore,
         config: Config,
     ) -> ContextResult:
-        """Classify the query intent and dispatch to the matching sub-strategy."""
+        # route to matched intent handler
         intent = classify_intent(query, self._client)
         cfg = config.strategies.s2_intent
 
@@ -65,12 +49,12 @@ class IntentDrivenStrategy(Strategy):
         elif intent == QueryIntent.COMPARISON:
             return self._comparison(query, buffer, store, cfg, config)
         else:
-            # Fallback — should not reach here
             return self._recency(query, buffer, cfg)
 
-    # ── Sub-strategies ───────────────────────────────────────
+    # --- sub-strategy handlers ---
 
     def _recency(self, query: str, buffer: StreamBuffer, cfg) -> ContextResult:
+
         """RECENCY: Last N rows for the queried ticker."""
         ticker = _extract_ticker(query)
         if ticker:
@@ -204,7 +188,7 @@ class IntentDrivenStrategy(Strategy):
         )
 
 
-# ── Helper functions ─────────────────────────────────────────
+# --- helper functions ---
 
 _KNOWN_TICKERS = {"AAPL", "GOOG", "MSFT", "TSLA"}
 
@@ -222,13 +206,10 @@ def _extract_ticker(query: str) -> Optional[str]:
 
 
 def _extract_tickers(query: str, all_tickers: list[str]) -> list[str]:
-    """Extract all ticker symbols mentioned in the query.
-
-    If none found or query implies 'all', returns all configured tickers.
-    """
+    # pull tickers from query or default to all if none or keyword matched
     upper = query.upper()
 
-    # Check for "all" / "which" / "every" — implies all tickers
+    # check if query refers to all tickers
     if any(word in upper for word in ["ALL", "WHICH", "EVERY", "EACH"]):
         return all_tickers
 
@@ -237,6 +218,6 @@ def _extract_tickers(query: str, all_tickers: list[str]) -> list[str]:
 
 
 def _date_offset(date_str: str, days: int) -> str:
-    """Offset an ISO date string by N days. Returns ISO format."""
+    # offset iso date by n days
     dt = datetime.strptime(str(date_str)[:10], "%Y-%m-%d")
     return (dt + timedelta(days=days)).strftime("%Y-%m-%d")

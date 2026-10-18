@@ -1,13 +1,5 @@
-"""Thin wrapper around the Ollama REST API.
-
-Handles all LLM calls: query-answering, intent classification (S2),
-summarisation (S4), and relevance judging. Temperature is fixed low
-for reproducibility — the strategy, not sampling randomness, should
-explain differences between runs.
-
-All calls go through generate(), which is the single point of contact
-with Ollama. This makes it easy to log prompts and swap models.
-"""
+# wrapper around ollama local rest api for mistral / phi queries
+# all model calls go through generate() to measure latency accurately
 
 from __future__ import annotations
 
@@ -23,12 +15,6 @@ logger = logging.getLogger(__name__)
 
 
 class OllamaClient:
-    """Client for the Ollama local LLM REST API.
-
-    Args:
-        config: LLM configuration (model name, base URL, decoding params).
-    """
-
     def __init__(self, config: LLMConfig) -> None:
         self._model = config.model
         self._base_url = config.base_url.rstrip("/")
@@ -43,21 +29,8 @@ class OllamaClient:
         model_override: Optional[str] = None,
         temperature_override: Optional[float] = None,
     ) -> tuple[str, float]:
-        """Send a prompt to Ollama and return the response text + latency.
+        # post to /api/generate and measure inference time
 
-        Args:
-            prompt: The user/query prompt.
-            system: Optional system prompt prepended to the conversation.
-            model_override: Use a different model for this call (e.g. judge).
-            temperature_override: Override the default temperature.
-
-        Returns:
-            Tuple of (response_text, latency_seconds).
-
-        Raises:
-            ConnectionError: If Ollama is not reachable.
-            RuntimeError: If the API returns an error.
-        """
         model = model_override or self._model
         temperature = temperature_override if temperature_override is not None else self._temperature
 
@@ -89,7 +62,7 @@ class OllamaClient:
             ) from e
         except requests.HTTPError as e:
             raise RuntimeError(
-                f"Ollama API error: {resp.status_code} — {resp.text}"
+                f"Ollama API error: {resp.status_code} - {resp.text}"
             ) from e
 
         latency = time.perf_counter() - start
@@ -103,7 +76,7 @@ class OllamaClient:
         return response_text, latency
 
     def is_available(self) -> bool:
-        """Check whether Ollama is reachable and the model is loaded."""
+        # check whether ollama is running and model is loaded
         try:
             resp = requests.get(f"{self._base_url}/api/tags", timeout=5)
             if resp.status_code != 200:

@@ -1,11 +1,5 @@
-"""Extract the structured answer line from LLM free-text responses.
-
-The query-answering prompt requires the model to end with:
-    Answer: <value>
-
-This module extracts that value so metrics.py can compare it
-to ground truth without ambiguity.
-"""
+# extracts the 'Answer: <value>' line from the llm response
+# handles edge cases where model puts answer inline or with dollar signs
 
 from __future__ import annotations
 
@@ -14,28 +8,16 @@ from typing import Optional
 
 
 def parse_answer(response: str) -> Optional[str]:
-    """Extract the 'Answer: <value>' from an LLM response.
-
-    Searches from the end of the response backward for a line
-    matching 'Answer: ...' (case-insensitive).
-
-    Args:
-        response: The full LLM response text.
-
-    Returns:
-        The extracted answer value (stripped), or None if no
-        answer line is found.
-    """
+    # extract answer line via regex, check line start first then fallback to inline
     if not response:
         return None
 
-    # Primary: 'Answer: <value>' at start of a line (case-insensitive)
+    # check for 'Answer: <value>' at start of line
     matches = re.findall(
         r"^[Aa]nswer:\s*(.+)$", response, re.MULTILINE
     )
 
-    # Fallback: 'Answer: <value>' anywhere in the text (models sometimes
-    # write it inline, e.g. "The closing price is Answer: 281.74")
+    # fallback: search anywhere in response text if model placed it inline
     if not matches:
         matches = re.findall(
             r"[Aa]nswer:\s*(.+?)(?:\.\s|$)", response
@@ -43,7 +25,7 @@ def parse_answer(response: str) -> Optional[str]:
 
     if matches:
         answer = matches[-1].strip()
-        # Strip common decorations: $, %, leading/trailing quotes
+        # strip symbols like $, %, and quotation marks
         answer = answer.strip("$%\"'")
         return answer
 
@@ -51,15 +33,8 @@ def parse_answer(response: str) -> Optional[str]:
 
 
 def parse_judge_score(response: str) -> Optional[int]:
-    """Extract the 'Score: <integer>' from a judge LLM response.
+    # extracts 1-5 score from judge response
 
-    Args:
-        response: The full judge response text.
-
-    Returns:
-        The score as an integer (1-5), or None if not found
-        or out of range.
-    """
     if not response:
         return None
 

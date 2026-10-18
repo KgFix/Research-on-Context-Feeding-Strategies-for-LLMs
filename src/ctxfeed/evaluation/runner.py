@@ -1,17 +1,5 @@
-"""Evaluation runner: orchestrates the full query × strategy sweep.
-
-For each benchmark query × each strategy:
-1. Build context via the strategy
-2. Assemble the full prompt
-3. Call the LLM
-4. Parse the answer
-5. Score accuracy against programmatic ground truth
-6. Score relevance via LLM-as-judge
-7. Record latency
-8. Log the full prompt and save to results DB
-
-This is the core experiment loop.
-"""
+# evaluation sweep runner: tests benchmark queries across context strategies
+# evaluates accuracy against ground truth, judge score, ragas, and latency
 
 from __future__ import annotations
 
@@ -49,24 +37,8 @@ def run_evaluation(
     skip_judge: bool = False,
     skip_ragas: bool = False,
 ) -> pd.DataFrame:
-    """Run the full evaluation sweep: every query through every strategy.
+    # main eval loop: iterates over queries and strategies
 
-    Args:
-        queries: List of benchmark queries.
-        strategies: Dict of strategy_name → Strategy instance.
-        buffer: The populated stream buffer.
-        store: The populated historical store.
-        data: The full historical DataFrame (for ground truth computation).
-        client: Ollama client for LLM calls.
-        config: Pipeline configuration.
-        results_store: Where to persist results.
-        skip_judge: If True, skip the LLM-as-judge relevance scoring
-            (useful for quick iteration during development).
-        skip_ragas: If True, skip RAGAS answer relevancy scoring.
-
-    Returns:
-        DataFrame of all results.
-    """
     total = len(queries) * len(strategies)
     completed = 0
 
@@ -105,7 +77,7 @@ def run_evaluation(
                 )
             except Exception as e:
                 logger.error(
-                    "    FAILED: %s — %s", type(e).__name__, e
+                    "    FAILED: %s - %s", type(e).__name__, e
                 )
 
     logger.info("Evaluation complete: %d/%d runs", completed, total)
@@ -123,31 +95,29 @@ def _run_single(
     skip_judge: bool,
     skip_ragas: bool,
 ) -> ResultRow:
-    """Execute a single (query, strategy) evaluation run."""
-
-    # 1. Select context
+    # select context with active strategy
     ctx = strategy.select_context(query.query, buffer, store, config)
 
-    # 2. Assemble full prompt
+    # assemble full prompt
     full_prompt = QUERY_PROMPT.format(
         context=ctx.context_text,
         query=query.query,
     )
 
-    # 3. Call LLM and measure latency
+    # prompt llm and record inference latency
     start = time.perf_counter()
     response, _ = client.generate(full_prompt, system=ANALYST_SYSTEM_PROMPT)
     latency_ms = (time.perf_counter() - start) * 1000
 
-    # 4. Parse answer
+    # parse predicted answer from response text
     parsed = parse_answer(response)
 
-    # 5. Score accuracy
+    # score accuracy against ground truth
     accuracy = score_accuracy(
         parsed, ground_truth, query.answer_type, config.evaluation.numeric_tolerance
     )
 
-    # 6. Judge relevance (optional)
+    # optional judge & ragas relevance scoring
     relevance_score = None
     judge_text = None
     if not skip_judge:
@@ -155,15 +125,14 @@ def _run_single(
             query.query, response, ground_truth, client, config
         )
 
-    # 6b. RAGAS answer relevancy (optional)
     ragas_score_val = None
     if not skip_ragas:
         ragas_score_val, _ = compute_ragas_score(
             query.query, response, client
         )
 
-    # 7. Build result row
     return ResultRow(
+
         query_id=query.id,
         strategy_name=strategy.name,
         query_text=query.query,

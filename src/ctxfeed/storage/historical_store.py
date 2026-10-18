@@ -1,16 +1,5 @@
-"""SQLite-backed historical store for the full replayed data stream.
-
-Every row that enters the replay engine is persisted here. Strategies
-that need lookback beyond the stream buffer (S2-TREND, S2-ANOMALY,
-S3, S4) query this store.
-
-Schema:
-    ohlcv(ticker TEXT, date TEXT, open REAL, high REAL, low REAL,
-          close REAL, volume INTEGER,
-          PRIMARY KEY (ticker, date))
-
-    Index on (ticker, date) for fast range queries.
-"""
+# sqlite-backed store for historical ohlcv data
+# replayed stream records are persisted here for trend/anomaly/sql queries
 
 from __future__ import annotations
 
@@ -40,13 +29,6 @@ CREATE INDEX IF NOT EXISTS idx_ticker_date ON ohlcv (ticker, date)
 
 
 class HistoricalStore:
-    """SQLite store for full replayed OHLCV history.
-
-    Args:
-        db_path: Path to the SQLite database file.
-            Parent directories are created automatically.
-    """
-
     def __init__(self, db_path: str | Path) -> None:
         self._db_path = Path(db_path)
         self._db_path.parent.mkdir(parents=True, exist_ok=True)
@@ -56,10 +38,9 @@ class HistoricalStore:
         self._conn.execute(_CREATE_INDEX)
         self._conn.commit()
 
-    # ── Write ────────────────────────────────────────────────
+    # --- write methods ---
 
     def insert_row(self, row: dict) -> None:
-        """Insert a single OHLCV row. Silently replaces duplicates."""
         self._conn.execute(
             """INSERT OR REPLACE INTO ohlcv
                (ticker, date, open, high, low, close, volume)
@@ -77,12 +58,7 @@ class HistoricalStore:
         self._conn.commit()
 
     def insert_dataframe(self, df: pd.DataFrame) -> None:
-        """Bulk-insert a DataFrame of OHLCV rows.
-
-        Expected columns: ticker, date, open, high, low, close, volume.
-        """
-        records = df[["ticker", "date", "open", "high", "low", "close", "volume"]]
-        records = records.copy()
+        records = df[["ticker", "date", "open", "high", "low", "close", "volume"]].copy()
         records["date"] = records["date"].astype(str)
         self._conn.executemany(
             """INSERT OR REPLACE INTO ohlcv
@@ -92,7 +68,7 @@ class HistoricalStore:
         )
         self._conn.commit()
 
-    # ── Read ─────────────────────────────────────────────────
+    # --- read queries ---
 
     def query(
         self,
@@ -101,19 +77,6 @@ class HistoricalStore:
         end_date: Optional[str] = None,
         limit: Optional[int] = None,
     ) -> pd.DataFrame:
-        """Query OHLCV rows with optional filters.
-
-        Results are always sorted ascending by date (chronological).
-
-        Args:
-            ticker: Filter to a single ticker. None returns all.
-            start_date: Inclusive lower bound (ISO format string).
-            end_date: Inclusive upper bound (ISO format string).
-            limit: Maximum number of rows to return.
-
-        Returns:
-            DataFrame with columns: ticker, date, open, high, low, close, volume.
-        """
         clauses: list[str] = []
         params: list = []
 
@@ -139,10 +102,7 @@ class HistoricalStore:
     def get_nearest_rows(
         self, ticker: str, target_date: str, n: int = 3
     ) -> pd.DataFrame:
-        """Return the *n* rows for *ticker* closest to *target_date*.
-
-        Used by S2-TREND to get stratified historical samples.
-        """
+        # gets closest rows to target_date using sqlite julianday dist
         sql = """
             SELECT ticker, date, open, high, low, close, volume,
                    ABS(JULIANDAY(date) - JULIANDAY(?)) AS dist
@@ -155,20 +115,18 @@ class HistoricalStore:
         return df.drop(columns=["dist"]).sort_values("date").reset_index(drop=True)
 
     def row_count(self) -> int:
-        """Return total number of rows in the store."""
         cur = self._conn.execute("SELECT COUNT(*) FROM ohlcv")
         return cur.fetchone()[0]
 
-    # ── Lifecycle ────────────────────────────────────────────
+    # --- db cleanup ---
 
     def clear(self) -> None:
-        """Delete all rows from the store."""
         self._conn.execute("DELETE FROM ohlcv")
         self._conn.commit()
 
     def close(self) -> None:
-        """Close the database connection."""
         self._conn.close()
 
     def __repr__(self) -> str:
         return f"HistoricalStore(db_path='{self._db_path}', rows={self.row_count()})"
+

@@ -1,11 +1,5 @@
-"""Analysis script: generates paper-ready tables and plots from results.sqlite.
-
-Usage:
-    uv run python scripts/03_analyze_results.py
-
-Reads from data/db/results.sqlite (populated by 02_run_evaluation.py).
-Outputs plots to results/plots/ and summary tables to stdout.
-"""
+# analysis script: outputs tables and charts from results.sqlite
+# uv run python scripts/03_analyze_results.py
 
 import sys
 sys.path.insert(0, "src")
@@ -13,7 +7,7 @@ sys.path.insert(0, "src")
 from pathlib import Path
 
 import matplotlib
-matplotlib.use("Agg")  # Non-interactive backend (no Tk required)
+matplotlib.use("Agg")  # headless backend
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -21,15 +15,13 @@ from scipy import stats
 
 from ctxfeed.config import Config
 
-# ── Paths ─────────────────────────────────────────────────────
-
+# --- paths ---
 RESULTS_DIR = Path("results")
 PLOTS_DIR = RESULTS_DIR / "plots"
 PLOTS_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def load_results(db_path: str) -> pd.DataFrame:
-    """Load results from SQLite into a DataFrame."""
     import sqlite3
 
     conn = sqlite3.connect(db_path)
@@ -38,11 +30,9 @@ def load_results(db_path: str) -> pd.DataFrame:
     return df
 
 
-# ── Table 1: Overall Strategy Comparison ─────────────────────
-
+# --- table 1: overall strategy comparison ---
 
 def table_overall(df: pd.DataFrame) -> pd.DataFrame:
-    """Mean accuracy, relevance, RAGAS, and latency per strategy."""
     aggs = {
         "accuracy_mean": ("accuracy", "mean"),
         "accuracy_std": ("accuracy", "std"),
@@ -52,7 +42,6 @@ def table_overall(df: pd.DataFrame) -> pd.DataFrame:
         "latency_std": ("latency_ms", "std"),
         "n": ("accuracy", "count"),
     }
-    # Add RAGAS if column exists
     if "ragas_score" in df.columns:
         aggs["ragas_mean"] = ("ragas_score", "mean")
         aggs["ragas_std"] = ("ragas_score", "std")
@@ -60,11 +49,9 @@ def table_overall(df: pd.DataFrame) -> pd.DataFrame:
     return summary
 
 
-# ── Table 2: Accuracy by Query Category ──────────────────────
-
+# --- table 2: accuracy by category ---
 
 def table_by_category(df: pd.DataFrame) -> pd.DataFrame:
-    """Accuracy broken down by (strategy, category)."""
     pivot = df.pivot_table(
         values="accuracy",
         index="strategy_name",
@@ -75,11 +62,9 @@ def table_by_category(df: pd.DataFrame) -> pd.DataFrame:
     return pivot
 
 
-# ── Table 3: Accuracy by Answer Type ─────────────────────────
-
+# --- table 3: accuracy by answer type ---
 
 def table_by_answer_type(df: pd.DataFrame) -> pd.DataFrame:
-    """Accuracy broken down by (strategy, answer_type)."""
     pivot = df.pivot_table(
         values="accuracy",
         index="strategy_name",
@@ -89,7 +74,8 @@ def table_by_answer_type(df: pd.DataFrame) -> pd.DataFrame:
     return pivot
 
 
-# ── Figure 1: Grouped Bar Chart (Accuracy by Strategy × Category) ──
+# --- figure 1: accuracy grouped bar chart ---
+
 
 
 def plot_accuracy_by_category(df: pd.DataFrame) -> None:
@@ -141,11 +127,10 @@ def plot_accuracy_by_category(df: pd.DataFrame) -> None:
     print(f"  Saved: {PLOTS_DIR / 'accuracy_by_category.png'}")
 
 
-# ── Figure 2: Box Plot (Relevance Scores) ────────────────────
-
+# --- figure 2: relevance scores box plot ---
 
 def plot_relevance_boxplot(df: pd.DataFrame) -> None:
-    """Box plot of relevance scores per strategy."""
+
     if df["relevance_score"].isna().all():
         print("  Skipped relevance boxplot (no judge scores)")
         return
@@ -164,7 +149,7 @@ def plot_relevance_boxplot(df: pd.DataFrame) -> None:
         patch.set_facecolor(colour)
         patch.set_alpha(0.6)
 
-    ax.set_ylabel("Relevance Score (1–5)")
+    ax.set_ylabel("Relevance Score (1-5)")
     ax.set_title("LLM-as-Judge Relevance Scores by Strategy")
     ax.set_ylim(0.5, 5.5)
     ax.grid(axis="y", alpha=0.3)
@@ -175,11 +160,9 @@ def plot_relevance_boxplot(df: pd.DataFrame) -> None:
     print(f"  Saved: {PLOTS_DIR / 'relevance_boxplot.png'}")
 
 
-# ── Figure 3: RAGAS Answer Relevancy Box Plot ────────────────
-
+# --- figure 3: ragas answer relevancy box plot ---
 
 def plot_ragas_boxplot(df: pd.DataFrame) -> None:
-    """Box plot of RAGAS answer relevancy scores per strategy."""
     if "ragas_score" not in df.columns or df["ragas_score"].isna().all():
         print("  Skipped RAGAS boxplot (no RAGAS scores)")
         return
@@ -209,11 +192,9 @@ def plot_ragas_boxplot(df: pd.DataFrame) -> None:
     print(f"  Saved: {PLOTS_DIR / 'ragas_boxplot.png'}")
 
 
-# ── Figure 4: Latency Comparison ─────────────────────────────
-
+# --- figure 4: latency comparison ---
 
 def plot_latency(df: pd.DataFrame) -> None:
-    """Bar chart of mean latency per strategy with error bars."""
     stats_df = df.groupby("strategy_name")["latency_ms"].agg(["mean", "std"])
     strategies = sorted(stats_df.index)
     colours = ["#4e79a7", "#f28e2b", "#e15759", "#76b7b2", "#59a14f", "#edc949"][:len(strategies)]
@@ -247,11 +228,9 @@ def plot_latency(df: pd.DataFrame) -> None:
     print(f"  Saved: {PLOTS_DIR / 'latency_comparison.png'}")
 
 
-# ── Statistical Tests ─────────────────────────────────────────
-
+# --- statistical significance tests ---
 
 def run_statistical_tests(df: pd.DataFrame) -> None:
-    """Pairwise Wilcoxon signed-rank tests: each strategy vs S1 baseline."""
     baseline = "s1_naive"
     strategies = sorted(s for s in df["strategy_name"].unique() if s != baseline)
 
@@ -288,10 +267,10 @@ def run_statistical_tests(df: pd.DataFrame) -> None:
                 print(f"{strat:<20} {metric:<12} {'ERR':>8} {str(e)[:10]:>10}")
 
 
-# ── Main ──────────────────────────────────────────────────────
-
+# --- main execution ---
 
 def main():
+
     config = Config.from_yaml("config/config.yaml")
     db_path = config.evaluation.results_db
 

@@ -1,11 +1,6 @@
-"""Empirical Error Taxonomy & Diagnostic Script for Strategy S6 (Text-to-SQL).
-
-Analyzes all S6 execution logs from data/db/results.sqlite to classify failure modes,
-producing paper-ready summary tables, CSV exports, and a LaTeX table for the IEEE paper.
-
-Usage:
-    uv run python scripts/04_analyze_s6_errors.py
-"""
+# analyzes s6 (text-to-sql) failure modes from results.sqlite
+# generates error taxonomy breakdown and latex table for the paper
+# uv run python scripts/04_analyze_s6_errors.py
 
 import json
 import sqlite3
@@ -19,7 +14,7 @@ OUTPUT_CSV = OUTPUT_DIR / "s6_error_taxonomy.csv"
 
 
 def classify_error(row: dict) -> str:
-    """Classify the root cause of an inaccurate prediction (accuracy == 0.0)."""
+    # classifies root cause of zero-accuracy s6 predictions
     meta = row.get("strategy_metadata", {})
     used_fallback = meta.get("used_fallback", False)
     sql_error = (meta.get("sql_error") or "").lower()
@@ -29,10 +24,9 @@ def classify_error(row: dict) -> str:
         return "Correct Prediction"
 
     if not used_fallback:
-        # Valid SQL executed, but produced incorrect answer
         return "Semantic/Calculation Error (Valid SQL)"
 
-    # Fallback was triggered due to SQL execution failure
+    # check failure reason when fallback was triggered
     if "tabulate" in sql_error:
         return "Legacy Environment/Package Missing"
     elif "curdate" in sql_error or "date_sub" in sql_error or "interval" in sql_error:
@@ -42,7 +36,6 @@ def classify_error(row: dict) -> str:
     elif "misuse of aggregate" in sql_error:
         return "Illegal Aggregate in WHERE Clause"
     elif "syntax error" in sql_error or "near" in sql_error:
-        # Check if syntax error is due to interval / date functions
         if "interval" in gen_sql or "date_sub" in gen_sql or "curdate" in gen_sql:
             return "Dialect Mismatch (MySQL/PG in SQLite)"
         return "General SQL Syntax Error"
@@ -74,7 +67,7 @@ def main():
     print(f"   S6 (Text-to-SQL) Empirical Error Analysis (N={total_runs})")
     print(f"=======================================================\n")
 
-    # Parse metadata JSON
+    # parse metadata json
     for r in rows:
         if isinstance(r["strategy_metadata"], str):
             try:
@@ -88,14 +81,14 @@ def main():
 
     df = pd.DataFrame(rows)
 
-    # ── Summary by Error Type ─────────────────────────────────────
+    # --- summary by error type ---
     counts = df["error_category"].value_counts()
     print("--- Distribution of Execution & Error Types ---")
     for err_type, count in counts.items():
         pct = (count / total_runs) * 100
         print(f"  {err_type:<45} : {count:>3} ({pct:>5.1f}%)")
 
-    # ── Category Breakdown Table ──────────────────────────────────
+    # --- category breakdown table ---
     pivot = pd.crosstab(
         df["query_category"],
         df["error_category"],
@@ -105,13 +98,14 @@ def main():
     print("\n--- Error Taxonomy by Query Category ---")
     print(pivot.to_string())
 
-    # Save to CSV
+    # save to csv
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     pivot.to_csv(OUTPUT_CSV)
     print(f"\nSaved CSV taxonomy to: {OUTPUT_CSV}")
 
-    # ── Generate LaTeX Table for the IEEE Paper ───────────────────
+    # --- generate latex table ---
     print("\n--- LaTeX Table for Research Paper ---")
+
     latex_code = [
         "\\begin{table}[htbp]",
         "\\centering",

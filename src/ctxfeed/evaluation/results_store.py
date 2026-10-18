@@ -1,13 +1,5 @@
-"""Results storage: SQLite schema for evaluation results.
-
-Stores one row per (query × strategy) combination, including:
-- The full assembled prompt (for auditability)
-- The LLM response
-- Accuracy score, relevance score, latency
-- Strategy metadata
-
-This is the raw data that the analysis notebook reads.
-"""
+# results store: sqlite database for evaluation runs
+# stores prompt, response, ground truth, accuracy, judge score, latency per trial
 
 from __future__ import annotations
 
@@ -18,6 +10,7 @@ from pathlib import Path
 from typing import Optional
 
 import pandas as pd
+
 
 
 _CREATE_TABLE = """
@@ -72,11 +65,7 @@ class ResultRow:
 
 
 class ResultsStore:
-    """SQLite store for evaluation results.
-
-    Args:
-        db_path: Path to the results SQLite database.
-    """
+    # sqlite store for benchmark evaluation results
 
     def __init__(self, db_path: str | Path) -> None:
         self._db_path = Path(db_path)

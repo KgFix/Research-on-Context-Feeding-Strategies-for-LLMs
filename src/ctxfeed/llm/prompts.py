@@ -1,15 +1,7 @@
-"""Prompt templates for all LLM interactions.
+# prompt templates for llm calls across strategies and evaluation
+# format strings with named placeholders
 
-Centralises every prompt so they can be reviewed and adjusted in one
-place. The query-answering prompt enforces a parseable "Answer: <value>"
-final line so answer_parser.py can extract it reliably.
-
-Templates use str.format() with named placeholders — no f-strings,
-so the templates themselves are static and inspectable.
-"""
-
-# ── System prompt for query-answering ────────────────────────
-
+# --- system prompt for financial qa ---
 ANALYST_SYSTEM_PROMPT = """\
 You are a precise financial data analyst. You answer questions about \
 stock market data based ONLY on the data provided in the context below. \
@@ -25,8 +17,7 @@ Rules:
 """
 
 
-# ── Query prompt template ────────────────────────────────────
-
+# --- query prompt template ---
 QUERY_PROMPT = """\
 ## Context Data
 
@@ -40,8 +31,7 @@ Remember: end your response with "Answer: <value>" on its own line.\
 """
 
 
-# ── Intent classifier (used by S2) ──────────────────────────
-
+# --- intent classifier (used by s2) ---
 INTENT_CLASSIFIER_SYSTEM = """\
 You are a query intent classifier for financial data questions. \
 Classify the user's question into exactly ONE of these categories:
@@ -61,8 +51,7 @@ Respond with ONLY the category name, nothing else.\
 INTENT_CLASSIFIER_PROMPT = "{query}"
 
 
-# ── Summarisation prompt (used by S4) ────────────────────────
-
+# --- summarisation prompt (used by s4) ---
 SUMMARISATION_SYSTEM = """\
 You are a financial data summariser. Given a table of historical \
 stock market data, produce a concise summary paragraph covering:
@@ -85,8 +74,7 @@ Provide a concise factual summary paragraph.\
 """
 
 
-# ── LLM-as-judge relevance scoring ──────────────────────────
-
+# --- llm-as-judge relevance scoring ---
 JUDGE_SYSTEM = """\
 You are an impartial evaluator assessing the quality of an AI's \
 response to a financial data question. Rate the response on a \
@@ -116,8 +104,7 @@ Rate the AI response quality (1-5). End with "Score: <integer>".\
 """
 
 
-# ── S5 Agentic critique (sufficiency check) ─────────────────
-
+# --- s5 agentic critique (sufficiency check) ---
 CRITIQUE_SYSTEM = """\
 You check whether tabular data contains enough information to answer \
 a given question. Respond with ONLY "Yes" or "No", nothing else.\
@@ -133,8 +120,7 @@ Does this data contain enough information to answer the question? (Yes/No)\
 """
 
 
-# ── RAGAS Answer Relevancy (reverse-question generation) ─────
-
+# --- ragas answer relevancy (reverse-question generation) ---
 RAGAS_SYSTEM = """\
 You generate questions that a given answer appears to address. \
 Output exactly 3 questions, one per line, numbered 1-3. \
@@ -152,3 +138,4 @@ Format:
 2. <question>
 3. <question>\
 """
+

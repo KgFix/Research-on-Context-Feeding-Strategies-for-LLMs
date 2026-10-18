@@ -1,8 +1,6 @@
-"""Script 01: Fetch and cache stock data from Yahoo Finance.
+# pulls daily stock data from yahoo finance and caches locally
+# uv run python scripts/01_fetch_data.py
 
-Usage:
-    uv run python scripts/01_fetch_data.py
-"""
 
 import sys
 sys.path.insert(0, "src")

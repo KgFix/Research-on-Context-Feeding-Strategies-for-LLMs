@@ -1,13 +1,5 @@
-"""Download and cache historical OHLCV data from Yahoo Finance.
-
-Uses yfinance to pull daily data for configured tickers. Data is
-cached locally as CSV to avoid repeated network calls. If cached
-files exist and cover the requested date range, they are loaded
-directly without re-downloading.
-
-Output schema per ticker (DataFrame columns):
-    ticker, date, open, high, low, close, volume
-"""
+# downloads and caches daily stock data from yahoo finance
+# caches to csv in data/raw so we dont hit rate limits on repeat runs
 
 from __future__ import annotations
 
@@ -26,18 +18,7 @@ def fetch_stock_data(
     end_date: str,
     cache_dir: str | Path = "data/raw",
 ) -> pd.DataFrame:
-    """Fetch OHLCV data for all tickers, using local cache when available.
-
-    Args:
-        tickers: List of ticker symbols (e.g. ["AAPL", "GOOG"]).
-        start_date: Start date (inclusive), ISO format.
-        end_date: End date (inclusive), ISO format.
-        cache_dir: Directory for cached CSV files.
-
-    Returns:
-        Combined DataFrame for all tickers, sorted by (date, ticker).
-        Columns: ticker, date, open, high, low, close, volume.
-    """
+    # pull ohlcv for tickers, load from csv cache if already downloaded
     cache_path = Path(cache_dir)
     cache_path.mkdir(parents=True, exist_ok=True)
 
@@ -67,11 +48,8 @@ def fetch_stock_data(
 
 
 def _download_ticker(ticker: str, start: str, end: str) -> pd.DataFrame:
-    """Download daily OHLCV for a single ticker via yfinance.
+    # grab daily bars via yfinance
 
-    Returns a DataFrame with standardised column names and an
-    explicit 'ticker' column.
-    """
     raw = yf.download(ticker, start=start, end=end, progress=False, auto_adjust=True)
 
     if raw.empty:

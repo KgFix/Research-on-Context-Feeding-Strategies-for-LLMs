@@ -1,6 +1,7 @@
 # Python
 __pycache__/
 *.py[cod]
+*$py.class
 *.egg-info/
 dist/
 build/
@@ -9,27 +10,42 @@ build/
 # Virtual environment
 .venv/
 venv/
+env/
 
 # uv
 # lockfile is checked in
 # uv.lock
 
-# IDE
+# IDE & Editor files
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
 
-# OS
+# Operating System files
 .DS_Store
 Thumbs.db
+desktop.ini
 
-# Project-specific
-data/raw/*.csv
-data/raw/*.parquet
-data/db/*.sqlite
+# Project Data & Database Artifacts (Reproducible via scripts/01_fetch_data.py)
+data/raw/
+data/db/*.sqlite*
+data/db/*.db*
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite-journal
+
+# Evaluation Results & Plots (Generated via scripts/03_analyze_results.py)
 results/
 !docs/assets/plots/
 
-# Environment
+# Presentation Slide Deck Generator Scripts & PPTX Assets
+scripts/*presentation*
+scripts/*deck*
+scripts/*pptx*
+*.pptx
+
+# Environment & Secrets
 .env
+.env.*

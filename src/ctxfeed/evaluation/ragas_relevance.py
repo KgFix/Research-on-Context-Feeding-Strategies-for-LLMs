@@ -1,23 +1,5 @@
-"""RAGAS-style Answer Relevancy scoring.
-
-Computes an objective relevance metric by reverse-engineering the
-generated answer: if the answer is relevant to the query, then
-questions derived from the answer should semantically align with
-the original query.
-
-Algorithm (per RAGAS framework):
-    1. LLM generates 3 questions the answer appears to address
-    2. Embed the original query and the 3 generated questions
-    3. Score = mean cosine similarity between original and generated
-
-Output: a float in [0, 1] where 1 = perfectly relevant.
-
-This replaces subjective LLM self-judging with a deterministic,
-mathematically defensible metric.
-
-Reference: Es et al., "RAGAS: Automated Evaluation of Retrieval
-Augmented Generation", arXiv:2309.15217, 2023.
-"""
+# ragas answer relevancy score (es et al. 2023)
+# asks llm to generate questions that match the answer, then checks cosine similarity with original query
 
 from __future__ import annotations
 
@@ -30,6 +12,7 @@ from sentence_transformers import SentenceTransformer
 
 from ctxfeed.llm.ollama_client import OllamaClient
 from ctxfeed.llm.prompts import RAGAS_PROMPT, RAGAS_SYSTEM
+
 
 logger = logging.getLogger(__name__)
 
@@ -77,23 +60,12 @@ def compute_ragas_score(
     answer: str,
     client: OllamaClient,
 ) -> tuple[Optional[float], list[str]]:
-    """Compute RAGAS Answer Relevancy score.
-
-    Args:
-        query: The original user query.
-        answer: The LLM's generated answer text.
-        client: Ollama client for generating reverse questions.
-
-    Returns:
-        Tuple of (score, generated_questions).
-        Score is 0-1 float, or None if computation failed.
-        generated_questions is the list of reverse-engineered questions.
-    """
+    # ragas answer relevancy: generates 3 reverse questions from answer and computes cosine sim to query
     if not answer or not answer.strip():
-        logger.warning("Empty answer — RAGAS score is None")
+        logger.warning("Empty answer: RAGAS score is None")
         return None, []
 
-    # Step 1: Generate reverse questions from the answer
+    # generate reverse questions from answer text
     prompt = RAGAS_PROMPT.format(answer=answer)
     response, _ = client.generate(prompt, system=RAGAS_SYSTEM)
     questions = _parse_questions(response)
@@ -107,7 +79,7 @@ def compute_ragas_score(
 
     logger.debug("RAGAS reverse questions: %s", questions)
 
-    # Step 2: Embed original query and generated questions
+    # embed original query and generated questions
     model = _get_embedding_model()
     texts = [query] + questions
     embeddings = model.encode(texts, normalize_embeddings=True)
@@ -115,7 +87,7 @@ def compute_ragas_score(
     query_emb = embeddings[0]
     question_embs = embeddings[1:]
 
-    # Step 3: Mean cosine similarity
+    # compute mean cosine similarity
     similarities = [
         _cosine_similarity(query_emb, q_emb)
         for q_emb in question_embs

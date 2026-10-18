@@ -1,11 +1,5 @@
-"""Intent classifier for S2 — Query-Intent-Driven Windowing.
-
-Uses a zero-shot LLM call to classify a natural language query into
-one of four intent categories: RECENCY, TREND, ANOMALY, COMPARISON.
-
-The classifier is a separate module so it can be tested independently
-of the S2 strategy logic.
-"""
+# intent classifier for s2: categorises query into recency/trend/anomaly/comparison
+# zero-shot prompt via ollama
 
 from __future__ import annotations
 
@@ -19,8 +13,6 @@ logger = logging.getLogger(__name__)
 
 
 class QueryIntent(Enum):
-    """The four analytical intent categories from the research design."""
-
     RECENCY = "RECENCY"
     TREND = "TREND"
     ANOMALY = "ANOMALY"
@@ -28,19 +20,8 @@ class QueryIntent(Enum):
 
 
 def classify_intent(query: str, client: OllamaClient) -> QueryIntent:
-    """Classify a query into one of the four intent categories.
+    # prompt model to classify question into one of the 4 buckets
 
-    Uses a zero-shot LLM call. If the LLM output doesn't match
-    any category, defaults to RECENCY (the safest fallback since
-    it behaves most like S1).
-
-    Args:
-        query: The natural language query to classify.
-        client: The Ollama client for making the LLM call.
-
-    Returns:
-        The classified QueryIntent.
-    """
     prompt = INTENT_CLASSIFIER_PROMPT.format(query=query)
     response, _ = client.generate(prompt, system=INTENT_CLASSIFIER_SYSTEM)
 
